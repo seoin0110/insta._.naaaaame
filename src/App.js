@@ -1,41 +1,67 @@
+import logo from "./logo.svg";
 import "./App.css";
-import { useCallback, useEffect, useState } from "react";
-import { Configuration, OpenAIApi } from "openai";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 function App() {
-  const [music, setMusic] = useState({ title: "", singer: "" });
+  const [resultText, setResultText] = useState("");
+  const [isReady, setIsReady] = useState(false);
 
-  // OpenAI API 호출
-  const fetchOpenApi = useCallback(() => {
-    const configuration = new Configuration({
-      apiKey: process.env.REACT_APP_OPENAI_KEY,
-    });
+  // const api_key=""
+  const messages = [
+    { role: "system", content: "You are a helpful assistant." },
+    { role: "user", content: "서강대에 대해서 설명해줘" },
+  ];
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: "Bearer " + process.env.REACT_APP_OPENAI_KEY,
+  };
+  const data = {
+    model: "gpt-3.5-turbo",
+    temperature: 0.5,
+    n: 1,
+    messages: messages,
+  };
 
-    const testPrompt = "recommend me one female indie song";
-
-    new OpenAIApi(configuration)
-      .createCompletion({
-        model: "text-davinci-003",
-        prompt: testPrompt,
-        temperature: 0,
-        max_tokens: 150,
-      })
+  const handleSubmit = (e) => {
+    axios
+      .post(
+        "https://api.openai.com/v1/chat/completions",
+        JSON.stringify({
+          messages: messages,
+          model: "gpt-3.5-turbo",
+        }),
+        { headers }
+      )
       .then((res) => {
-        const { choices } = res.data;
-        const [title, singer] = choices[0].text.split("by");
-
-        setMusic({ title, singer }); // 음악의 제목, 가수 데이터 저장
+        setIsReady(true);
+        setResultText(res.data.choices[0].message.content);
+        // console.log(res.data.choices[0].message.content)
+      })
+      .catch((err) => {
+        console.log(err);
+        // alert("error: "+ err.response.data.error)
       });
-  }, []);
+  };
 
-  useEffect(() => {
-    fetchOpenApi(); // Mount 시 호출한다.
-  }, []);
+  handleSubmit();
 
-  const { title, singer } = music;
   return (
     <div className="App">
-      {title} - {singer}
+      <header className="App-header">
+        <img src={logo} className="App-logo" alt="logo" />
+        <p>
+          Edit <code>src/App.js</code> and save to reload.
+        </p>
+        <a
+          className="App-link"
+          href="https://reactjs.org"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Learn React
+        </a>
+      </header>
     </div>
   );
 }
