@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
-import Result from "./Result";
+// import Result from "./Result";
 import { BsGithub } from "react-icons/bs";
 import  GPT4  from "../openai";
+
 // import { GPT3 } from "../api/OpenAI";
 // import Loader from "react-spinners/PulseLoader";
 
@@ -50,7 +51,7 @@ const Main = () => {
 	);
 	
 	const [isResult, setIsResult] = useState(false);
-	const [result, setResult] = useState("");
+	const [result, setResult] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const PrePost = () => {
 		//console.log(strings);
@@ -58,7 +59,8 @@ const Main = () => {
 			strings.name === "" ||
 			strings.eng_name === "" ||
 			strings.chin_name === "" ||
-			strings.birthday === ""
+			strings.birthday === "" ||
+            strings.nickname === ""
 		) {
 			alert("모든 필드를 전부 작성했는지 다시 확인해주세요!");
 		} else {
@@ -66,7 +68,9 @@ const Main = () => {
             
             GPT4(strings)
             .then((res)=>{
-                setResult(res);
+                const changedText = res.match(/\[[^\]]+\]/g)[0];
+                console.log(JSON.parse(changedText))
+                setResult(JSON.parse(changedText));
                 setLoading(false);
             })
             .catch((err)=>{
@@ -77,7 +81,7 @@ const Main = () => {
 	};
 	useEffect(() => {
 		//console.log("gpt 응답 : ", result);
-		if (result !== "" && result !== undefined) {
+		if (result.length !== 0 && result !== undefined) {
 			setIsResult(true);
 		} else setIsResult(false);
 	}, [result]);
@@ -119,11 +123,11 @@ const Main = () => {
 			/>
 			<BirthdayInput
 				onChange={onChangeBirthdayInput}
-				placeholder="생일을 입력해주세요"
+				placeholder="좋아하는 숫자(생일이나 생년 등)을 입력해주세요 ex. 1004"
 			/>
             <NicknameInput
 				onChange={onChangeNicknameInput}
-				placeholder="별명을 입력해주세요"
+				placeholder="별명을 입력해주세요 ex. 식인토끼"
 			/>
 			<Button
 				onClick={() => {
@@ -137,7 +141,10 @@ const Main = () => {
 			{isResult ? (
 				result ? (
                     // <Result result={result} result2={result2} />
-                    <div>{result}</div>
+                    // <div>{result}</div>
+                    <div style={{color: "#fff", "font-size": "20px", "marginTop": "12px"}}>
+                        {result.map((id, idx)=><div key={idx}>{id}</div>)}
+                    </div>
 				) : null
 			) : null}
 			<div
@@ -161,7 +168,7 @@ const Main = () => {
 
 export default Main;
 
-const INPUT_LENGTH=40;
+const INPUT_LENGTH=30;
 
 const Container = styled.div`
 	width: 100%;
@@ -236,6 +243,7 @@ const ChinNameInput = styled.textarea`
 	height: 20px;
 	padding: 5px;
 	font-size: 14px;
+    font-family: "Pretendard";
 	margin-bottom: 20px;
 	border-radius: 8px;
 	border: 0;
