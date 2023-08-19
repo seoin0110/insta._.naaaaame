@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
 import Result from "./Result";
 import { BsGithub } from "react-icons/bs";
+import  GPT4  from "../openai";
 // import { GPT3 } from "../api/OpenAI";
 // import Loader from "react-spinners/PulseLoader";
 
@@ -15,7 +16,7 @@ const Main = () => {
 		eng_name: "",
 		chin_name: "",
 		birthday: "",
-		team: "",
+		nickname: "",
 	});
 	const onChangeNameInput = useCallback(
 		(e) => {
@@ -41,16 +42,15 @@ const Main = () => {
 		},
 		[strings]
 	);
-	const onChangeTeamInput = useCallback(
+    const onChangeNicknameInput = useCallback(
 		(e) => {
-			setStrings({ ...strings, team: e.target.value });
+			setStrings({ ...strings, nickname: e.target.value });
 		},
 		[strings]
 	);
+	
 	const [isResult, setIsResult] = useState(false);
-	const [isResult2, setIsResult2] = useState(false);
 	const [result, setResult] = useState("");
-	const [result2, setResult2] = useState("");
 	const [loading, setLoading] = useState(false);
 	const PrePost = () => {
 		//console.log(strings);
@@ -58,25 +58,21 @@ const Main = () => {
 			strings.name === "" ||
 			strings.eng_name === "" ||
 			strings.chin_name === "" ||
-			strings.birthday === "" ||
-			strings.team === ""
+			strings.birthday === ""
 		) {
 			alert("모든 필드를 전부 작성했는지 다시 확인해주세요!");
 		} else {
 			setLoading(true);
-			// GPT3.askGPT(strings)
-			// 	.then((res) => {
-			// 		//console.log(res);
-			// 		setResult(res.data.choices[0].message.content);
-			// 		GPT3.getDirectory(strings)
-			// 			.then((res) => {
-			// 				//console.log(res);
-			// 				setResult2(res.data.choices[0].message.content);
-			// 				setLoading(false);
-			// 			})
-			// 			.catch((err) => console.log(err));
-			// 	})
-			// 	.catch((err) => console.log(err));
+            
+            GPT4(strings)
+            .then((res)=>{
+                setResult(res);
+                setLoading(false);
+            })
+            .catch((err)=>{
+                alert("에러 발생!");
+                console.log(err);
+            })
 		}
 	};
 	useEffect(() => {
@@ -85,16 +81,12 @@ const Main = () => {
 			setIsResult(true);
 		} else setIsResult(false);
 	}, [result]);
-	useEffect(() => {
-		//console.log("gpt 응답 : ", result2);
-		if (result2 !== "" && result2 !== undefined) {
-			setIsResult2(true);
-		} else setIsResult2(false);
-	}, [result2]);
+	
 	return (
 		<Container
 			style={{
-				height: isResult ? (isResult2 ? "100%" : "100vh") : "100vh",
+				// height: isResult ? "100%" : "100vh",
+				height: "100vh",
 			}}
 		>
 			<Top
@@ -105,7 +97,7 @@ const Main = () => {
 			</Top>
 			<Title
 				style={{
-					marginTop: isResult ? (isResult2 ? "40px" : "0px") : "0px",
+					marginTop: isResult ? "40px" : "0px",
 				}}
 			>
 				⭐️ insta._.naaaaame ⭐️
@@ -129,11 +121,9 @@ const Main = () => {
 				onChange={onChangeBirthdayInput}
 				placeholder="생일을 입력해주세요"
 			/>
-			<SubTitle>👥 팀원 소개 👥</SubTitle>
-			<TeamInput
-				onChange={onChangeTeamInput}
-				placeholder="'팀원 이름 : 참여한 기능, 페이지'와 같이 작성하고 Enter를 통해 팀원을 구분해주세요"
-				style={{ width: "50%" }}
+            <NicknameInput
+				onChange={onChangeNicknameInput}
+				placeholder="별명을 입력해주세요"
 			/>
 			<Button
 				onClick={() => {
@@ -146,9 +136,8 @@ const Main = () => {
 			</Button>
 			{isResult ? (
 				result ? (
-					result2 ? (
-						<Result result={result} result2={result2} />
-					) : null
+                    // <Result result={result} result2={result2} />
+                    <div>{result}</div>
 				) : null
 			) : null}
 			<div
@@ -171,6 +160,8 @@ const Main = () => {
 };
 
 export default Main;
+
+const INPUT_LENGTH=40;
 
 const Container = styled.div`
 	width: 100%;
@@ -221,7 +212,7 @@ const TitleDes = styled.div`
 `;
 
 const NameInput = styled.input`
-	width: 20%;
+	width: ${INPUT_LENGTH}%;
 	height: 20px;
 	padding: 5px;
 	font-size: 14px;
@@ -230,15 +221,8 @@ const NameInput = styled.input`
 	border: 0;
 `;
 
-const SubTitle = styled.div`
-	font-family: "Pretendard";
-	color: #ffffff;
-	font-size: 20px;
-	margin: 10px 0;
-`;
-
 const EngNameInput = styled.input`
-	width: 20%;
+    width: ${INPUT_LENGTH}%;
 	height: 20px;
 	padding: 5px;
 	font-size: 14px;
@@ -248,7 +232,7 @@ const EngNameInput = styled.input`
 `;
 
 const ChinNameInput = styled.textarea`
-	width: 20%;
+    width: ${INPUT_LENGTH}%;
 	height: 20px;
 	padding: 5px;
 	font-size: 14px;
@@ -258,7 +242,7 @@ const ChinNameInput = styled.textarea`
 `;
 
 const BirthdayInput = styled.input`
-	width: 20%;
+    width: ${INPUT_LENGTH}%;
 	height: 20px;
 	padding: 5px;
 	font-size: 14px;
@@ -267,14 +251,14 @@ const BirthdayInput = styled.input`
 	border: 0;
 `;
 
-const TeamInput = styled.textarea`
-	height: 40px;
+const NicknameInput = styled.input`
+    width: ${INPUT_LENGTH}%;
+	height: 20px;
 	padding: 5px;
 	font-size: 14px;
 	margin-bottom: 20px;
 	border-radius: 8px;
 	border: 0;
-	resize: none;
 `;
 
 const Button = styled.div`
